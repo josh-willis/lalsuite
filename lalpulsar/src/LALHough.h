@@ -196,12 +196,14 @@ typedef struct tagPHMDVectorSequence{
 } PHMDVectorSequence;
 
 typedef struct tagSparsePHMDVectorSequence{
-  UINT4        nfSize;    /**< number of different frequencies */
-  UINT4        length;    /**< number of elements for each frequency */
-  UINT8        fBinMin;   /**< frequency index of smallest intrinsic frequency in circular buffer */
-  REAL8        deltaF;    /**< frequency resolution */
-  UINT4        breakLine; /**< Mark \f$\in\f$[0, \c nfSize) (of the circular buffer) pointing to the starting of the \c fBinMin line */
-  SparsePHMD   *sphmd;    /**< the sparse partial Hough map derivatives */
+  UINT4         nfSize;    /**< number of different frequencies */
+  UINT4         length;    /**< number of elements for each frequency */
+  UINT8         fBinMin;   /**< frequency index of smallest intrinsic frequency in circular buffer */
+  REAL8         deltaF;    /**< frequency resolution */
+  UINT4         breakLine; /**< Mark \f$\in\f$[0, \c nfSize) (of the circular buffer) pointing to the starting of the \c fBinMin line */
+  SparsePHMD    *sphmd;    /**< the sparse partial Hough map derivatives */
+  HOUGHphmd     workPHMD; /* working space */
+  HOUGHMapDeriv workHD;   /* working space */
 } SparsePHMDVectorSequence;
 
 /** This structure stores the residual spin-down parameters at a given time */

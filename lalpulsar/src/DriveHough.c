@@ -1046,7 +1046,8 @@ void LALHOUGHConstructSpaceSparsePHMD  (LALStatus                  *status,	/**<
 
       TRY( LALHOUGHPeak2SparsePHMD(status->statusPtr,
 				   &(sphmdVS->sphmd[ j*length+k ]),
-				   &(lutV->lut[k]), &(pgV->pg[k]) ), status);
+				   &(lutV->lut[k]), &(pgV->pg[k]),
+				   &(sphmdVS->workPHMD), &(sphmd->workHD)), status);
       ++fBin;
     }
   }
@@ -1126,7 +1127,8 @@ void LALHOUGHupdateSpaceSparsePHMDup  (LALStatus                  *status,
     sphmdVS->sphmd[ breakLine*length+k ].fBin = fBin;
     TRY( LALHOUGHPeak2SparsePHMD(status->statusPtr,
 				 &(sphmdVS->sphmd[ breakLine*length+k ]),
-				 &(lutV->lut[k]), &(pgV->pg[k]) ), status);
+				 &(lutV->lut[k]), &(pgV->pg[k]),
+				 &(sphmdVS->workPHMD), &(sphmd->workHD)), status);
   }
 
   /* Shift fBinMin and its mark */
@@ -1217,7 +1219,8 @@ void LALHOUGHupdateSpaceSparsePHMDdn  (LALStatus                  *status,
     sphmdVS->sphmd[ breakLine*length+k ].fBin = fBin;
     TRY( LALHOUGHPeak2SparsePHMD(status->statusPtr,
 				 &(sphmdVS->sphmd[ breakLine*length+k ]),
-				 &(lutV->lut[k]), &(pgV->pg[k]) ), status);
+				 &(lutV->lut[k]), &(pgV->pg[k]),
+				 &(sphmdVS->workPHMD), &(sphmd->workHD)), status);
   }
 
   DETATCHSTATUSPTR (status);
