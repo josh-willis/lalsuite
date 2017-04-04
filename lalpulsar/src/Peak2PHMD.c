@@ -319,3 +319,95 @@ void LALHOUGHPeak2PHMD (LALStatus    *status,
   /* normal exit */
   RETURN (status);
 }
+
+void LALHOUGHFull2Sparse(LALStatus      *status,
+			 HoughDT        *full,
+                         UINT2          xlen,
+                         UINT2          ylen,
+                         SparseMatrix   *sparse
+                         )
+{
+
+  UINT2 i, j, k, nnz;
+
+  INITSTATUS(status);
+  ATTATCHSTATUSPTR (status);
+
+/*
+ * lots of error checking of arguments
+ */
+
+  /*   Make sure the arguments are not NULL: */
+  if (full == NULL) {
+    ABORT( status, PHMDH_ENULL, PHMDH_MSGENULL);
+  }
+
+  if (sparse == NULL) {
+    ABORT( status, PHMDH_ENULL, PHMDH_MSGENULL);
+  }
+
+  /*  Make sure the lengths are non-zero*/
+  if (xlen == 0) {
+    ABORT( status, PHMDH_ESIZE, PHMDH_MSGESIZE);
+  }
+
+  if (ylen == 0) {
+    ABORT( status, PHMDH_ESIZE, PHMDH_MSGESIZE);
+  }
+
+  /* Make full and sparse matrix have same dimensions */
+  if (xlen != sparse->xlen){
+    ABORT( status, PHMDH_EVAL, PHMDH_MSGEVAL);
+  }
+
+  if (ylen != sparse->ylen){
+    ABORT( status, PHMDH_EVAL, PHMDH_MSGEVAL);
+  }
+
+  /* If there is already something in sparse, then free it */
+  if (sparse->nnz){
+    LALFree(sparse->idx);
+    sparse->idx = NULL;
+    LALFree(sparse->values);
+    sparse->values = NULL;
+    sparse->nnz = 0;
+  }
+
+  /* Find number of non-zero values in full */
+
+  nnz = 0;
+
+  for (i = 0; i < ylen; i){
+    for (j = 0; j < xlen; j) {
+      if (full[i*xlen+j] != 0.0) {
+	nnz++;
+      }
+    }
+  }
+
+  /* Now another pass to create the sparse matrix */
+  if (nnz){
+    sparse->idx = LALMalloc(nnz, sizeof(UINT2));
+    sparse->values = LALMalloc(nnz, sizeof(HoughDT));
+    if ( (sparse->idx == NULL) || (sparse->values == NULL) ){
+      ABORT( status, PHMDH_ENULL, PHMDH_MSGENULL);
+    }
+    k = 0;
+    for (i = 0; i < ylen; i){
+      for (j = 0; j < xlen; j) {
+	if (full[i*xlen+j] != 0.0) {
+	  sparse->idx[k] = i*xlen+j;
+	  sparse->values[k] = full[i*xlen+j];
+	  k++;
+	}
+      }
+    }
+    sparse->nnz = nnz;
+  }
+
+  DETATCHSTATUSPTR (status);
+
+  /* normal exit */
+  RETURN (status);
+
+}
