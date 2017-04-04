@@ -161,8 +161,6 @@ typedef struct tagSparseMatrix{
 } SparseMatrix;
  
 typedef struct tagSparsePHMD{
-  UINT2          xSide;
-  UINT2          ySide;
   UINT8          fBin;
   HoughDT        weight;     /**< Weight to apply to each value*/
   SparseMatrix   sparse;
@@ -188,6 +186,15 @@ void LALHOUGHFull2Sparse(LALStatus      *status,
                          UINT2          ylen,
                          SparseMatrix  *sparse
                          );
+
+void LALHOUGHPeak2SparsePHMD (LALStatus     *status,
+			      SparsePHMD    *sphmd,    /* partial Hough map derivative */
+			      HOUGHptfLUT   *lut,      /* Look up table */
+			      HOUGHPeakGram *pg,       /* peakgram */
+                              HOUGHphmd     *workPHMD, /* working space */
+                              HOUGHMapDeriv *workHD   /* working space */
+			      );
+
 
 /*@}*/
 #ifdef  __cplusplus

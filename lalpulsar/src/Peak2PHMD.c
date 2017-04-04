@@ -411,3 +411,273 @@ void LALHOUGHFull2Sparse(LALStatus      *status,
   RETURN (status);
 
 }
+
+/***/
+
+void LALHOUGHPeak2SparsePHMD (LALStatus     *status,
+			      SparsePHMD    *sphmd,    /* partial Hough map derivative */
+			      HOUGHptfLUT   *lut,      /* Look up table */
+			      HOUGHPeakGram *pg,       /* peakgram */
+                              HOUGHphmd     *workPHMD, /* working space */
+                              HOUGHMapDeriv *workHD)   /* working space */
+{
+
+  INT2    i, j;
+  UCHAR   *column1P;
+  INT4    fBinDif, shiftPeak, minPeakBin, maxPeakBin, thisPeak;
+  INT2    relatIndex;
+  UINT4   lengthLeft, lengthRight, n, searchIndex;
+  UINT8   firstBin, lastBin, pgI, pgF;
+  /* --------------------------------------------- */
+
+  INITSTATUS(status);
+  ATTATCHSTATUSPTR (status);
+
+/**
+ * lots of error checking of arguments -- asserts have been
+ * replaced by aborts
+ */
+
+  /*   Make sure the arguments are not NULL: */
+  if (sphmd == NULL) {
+    ABORT( status, PHMDH_ENULL, PHMDH_MSGENULL);
+  }
+
+  if (lut == NULL) {
+    ABORT( status, PHMDH_ENULL, PHMDH_MSGENULL);
+  }
+
+  if (pg == NULL) {
+    ABORT( status, PHMDH_ENULL, PHMDH_MSGENULL);
+  }
+
+  if (workPHMD == NULL) {
+    ABORT( status, PHMDH_ENULL, PHMDH_MSGENULL);
+  }
+
+  if (workHD == NULL) {
+    ABORT( status, PHMDH_ENULL, PHMDH_MSGENULL);
+  }
+
+  /*  Make sure there are elements in firstColumn */
+  if (sphmd->ySide == 0) {
+    ABORT( status, PHMDH_ESIZE, PHMDH_MSGESIZE);
+  }
+
+  if (sphmd->xSide == 0) {
+    ABORT( status, PHMDH_ESIZE, PHMDH_MSGESIZE);
+  }
+
+  if (sphmd->sparse.xlen != workHD->xSide+1) {
+    ABORT( status, PHMDH_ESIZE, PHMDH_MSGESIZE);
+  }
+
+  if (sphmd->sparse.ylen != workHD->ySide) {
+    ABORT( status, PHMDH_ESIZE, PHMDH_MSGESIZE);
+  }
+
+  /* Make sure peakgram and lut have same frequency discretization */
+  if ( fabs((REAL4)lut->deltaF - (REAL4)pg->deltaF) > 1.0e-6) {
+    ABORT( status, PHMDH_EVAL, PHMDH_MSGEVAL);
+  }
+
+  /* Make sure phmd.fBin and lut are compatible */
+  /* case to "long long" to be expected type for llabs() */
+  fBinDif = llabs( (long long)( (sphmd->fBin) - (lut->f0Bin) ));
+  if ( fBinDif > lut->nFreqValid ) {
+    ABORT( status, PHMDH_EFREQ, PHMDH_MSGEFREQ);
+  }
+
+
+  pgI = pg->fBinIni;
+  pgF = pg->fBinFin;
+  /* bounds of interval to look at in the peakgram */
+  firstBin = (sphmd->fBin) + (lut->iniBin) + (lut->offset);
+  lastBin  = firstBin + (lut->nBin)-1;
+
+  /* Make sure peakgram f-interval and phmd.fBin+lut are compatible */
+  /*   ASSERT ( pgI <= firstBin, status, PHMDH_EINT, PHMDH_MSGEINT); */
+  /*   ASSERT ( pgF >= lastBin,  status, PHMDH_EINT, PHMDH_MSGEINT); */
+  if (  pgI > firstBin ) {
+    ABORT( status, PHMDH_EINT, PHMDH_MSGEINT);
+  }
+  if (  pgF < lastBin ) {
+    ABORT( status, PHMDH_EINT, PHMDH_MSGEINT);
+  }
+
+
+  /* -------------------------------------------------------------------   */
+  /* initialization */
+  /* -------------------------------------------------------------------   */
+  n= pg->length;
+
+  lengthLeft = 0;
+  lengthRight= 0;
+
+  column1P = &(workPHMD->firstColumn[0]);
+
+  for(i=0; i < workPHMD->ySide; ++i ){
+    *column1P = 0;
+    ++column1P;
+  }
+
+
+ /* -------------------------------------------------------------------   */
+         /* -------------------------------------------   */
+  if(n){  /* only if there are peaks present */
+         /* -------------------------------------------   */
+    INT2   lb1,rb1,lb2,rb2;
+    INT2   max1,min1,max2,min2;
+    INT2   nBinPos;
+    UCHAR  test1;
+
+    nBinPos = (lut->iniBin) + (lut->nBin) -1;
+    shiftPeak = pgI - (sphmd->fBin) - (lut->offset);
+
+   /* -------------------------------------------------------------------   */
+   /* searching for the initial peak to look at */
+   /* -------------------------------------------------------------------   */
+
+    searchIndex = (n * minPeakBin ) /(pgF-pgI+1);
+    if (searchIndex >= n) { searchIndex = n-1;}
+
+    /* moving backwards */
+    /* -----------------*/
+
+    test1=1;
+    while (searchIndex >0 && test1) {
+      if ( pg->peak[searchIndex -1] >=  minPeakBin ) {
+        --searchIndex;
+      }
+      else {
+        test1=0;
+      }
+    }
+
+    /* moving forwards */
+    /* -----------------*/
+
+    test1=1;
+    while (searchIndex < n-1  && test1) {
+      if ( pg->peak[searchIndex] <  minPeakBin ) {
+        ++searchIndex;
+      }
+      else {
+        test1=0;
+      }
+    }
+
+    /* -------------------------------------------------------------------   */
+    /* for all the interesting peaks (or none) */
+    /* -------------------------------------------------------------------   */
+
+    test1=1;
+
+    while (searchIndex < n  && test1) {
+      thisPeak = pg->peak[searchIndex];
+
+      if (thisPeak > maxPeakBin) {
+        test1=0;
+      } else {
+        if ( thisPeak >= minPeakBin) { /* we got a peak */
+	  /* relative Index */
+	  relatIndex = thisPeak + shiftPeak;
+
+	  i = relatIndex;
+	  if( relatIndex < 0 )  i =  nBinPos - relatIndex;
+
+
+	  if ( i >= lut->nBin ) {
+	    fprintf(stderr,"current index i=%d not lesser than nBin=%d\n [Peak2PHMD.c %d]\n", i,lut->nBin, __LINE__);
+	  }
+
+
+	  /* Reading the bin information */
+	  lb1 = lut->bin[i].leftB1;
+	  rb1 = lut->bin[i].rightB1;
+	  lb2 = lut->bin[i].leftB2;
+	  rb2 = lut->bin[i].rightB2;
+
+	  max1 = lut->bin[i].piece1max;
+	  min1 = lut->bin[i].piece1min;
+	  max2 = lut->bin[i].piece2max;
+	  min2 = lut->bin[i].piece2min;
+
+	  /* border selection from lut */
+
+	  if(lb1){
+	    if (  lut->border + lb1 == NULL ) {
+	      /* fprintf(stderr,"null pointer found [Peak2PHMD.c %d]\n", __LINE__); */
+	      ABORT( status, PHMDH_ENULL, PHMDH_MSGENULL);
+	    }
+	    workPHMD->leftBorderP[lengthLeft] = &( lut->border[lb1] );
+	    ++lengthLeft;
+	  }
+
+
+	  if(lb2){
+	    if (  lut->border + lb2 == NULL ) {
+	      /* fprintf(stderr,"null pointer found [Peak2PHMD.c %d]\n", __LINE__); */
+	      ABORT( status, PHMDH_ENULL, PHMDH_MSGENULL);
+	    }
+	    workPHMD->leftBorderP[lengthLeft] = &( lut->border[lb2] );
+	    ++lengthLeft;
+	  }
+
+	  if(rb1){
+	    if (  lut->border + rb1 == NULL ) {
+	      /* fprintf(stderr,"null pointer found [Peak2PHMD.c %d]\n", __LINE__); */
+	      ABORT( status, PHMDH_ENULL, PHMDH_MSGENULL);
+	    }
+	    workPHMD->rightBorderP[lengthRight] = &( lut->border[rb1] );
+	    ++lengthRight;
+	  }
+
+	  if(rb2){
+	    if (  lut->border + rb2 == NULL ) {
+	      /* fprintf(stderr,"null pointer found [Peak2PHMD.c %d]\n", __LINE__); */
+	      ABORT( status, PHMDH_ENULL, PHMDH_MSGENULL);
+	    }
+	    workPHMD->rightBorderP[lengthRight] = &( lut->border[rb2] );
+	    ++lengthRight;
+	  }
+
+	  /* correcting 1st column */
+	  for(j=min1; j<=max1; ++j) {
+	    if (workPHMD->firstColumn + j == NULL) {
+	      /* fprintf(stderr,"null pointer found [Peak2PHMD.c %d]\n", __LINE__); */
+	      ABORT( status, PHMDH_ENULL, PHMDH_MSGENULL);
+	    }
+	    workPHMD->firstColumn[j] = 1;
+	  }
+
+	  for(j=min2; j<=max2; ++j) {
+	    if (workPHMD->firstColumn + j == NULL) {
+	      /* fprintf(stderr,"null pointer found [Peak2PHMD.c %d]\n", __LINE__); */
+	      ABORT( status, PHMDH_ENULL, PHMDH_MSGENULL);
+	    }
+	    workPHMD->firstColumn[j] = 1;
+	  }
+
+	}
+        ++searchIndex;
+      }
+      /* -------------------------------------------------------------------   */
+
+    }
+  }
+
+  /* -------------------------------------------------------------------   */
+
+  workPHMD->lengthLeft  = lengthLeft;
+  workPHMD->lengthRight = lengthRight;
+  memset((void *) workHD->map, 0, (workHD->xSide+1)*(workHD->ySide)*sizeof(HoughDT) );
+  TRY( LALHOUGHAddPHMD2HD_W(status->statusPtr, workHD, workPHMD), status);
+  TRY( LALHOUGHFull2Sparse(status->statusPtr, workHD->map, (workHD->xSide)+1, workHD->ySide, &(sphmd->sparse) ), status);
+  /* -------------------------------------------   */
+
+  DETATCHSTATUSPTR (status);
+
+  /* normal exit */
+  RETURN (status);
+}

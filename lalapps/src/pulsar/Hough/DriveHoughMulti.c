@@ -2284,14 +2284,22 @@ void LALHOUGHCreateSparsePHMDs(LALStatus                 *status,
         ABORT (status, DRIVEHOUGHCOLOR_EBAD, DRIVEHOUGHCOLOR_MSGEBAD);
     }
     
+    sphmdVS->workPHMD.maxNBorders  = maxNBorders;
+    sphmdVS->workPHMD.ySide        = ySide;
+    sphmdVS->workPHMD.leftBorderP  = (HOUGHBorder **) LALCalloc(maxNBorders, sizeof(HOUGHBorder *));
+    sphmdVS->workPHMD.rightBorderP = (HOUGHBorder **) LALCalloc(maxNBorders, sizeof(HOUGHBorder *));
+    sphmdVS->workPHMD.firstColumn  = (UCHAR *) LALCalloc(ySide, sizeof(UCHAR));
+
+    sphmdVS->workHD.xSide = xSide;
+    sphmdVS->workHD.ySide = ySide;
+    sphmdVS->workHD.map   = (HoughDT *) LALCalloc(ySide*(xSide+1), sizeof(HoughDT));
+
     for(j = 0; j < sphmdVS->length * sphmdVS->nfSize; j++){
         
         if ( sphmdVS->sphmd + j == NULL) {
             ABORT (status, DRIVEHOUGHCOLOR_ENULL, DRIVEHOUGHCOLOR_MSGENULL);
         }
         
-        sphmdVS->sphmd[j].xSide = xSide;
-        sphmdVS->sphmd[j].ySide = ySide;
         sphmdVS->sphmd[j].weight = 1.0;
         sphmdVS->sphmd[j].sparse.xlen = xSide+1;
         sphmdVS->sphmd[j].sparse.ylen = ySide;
