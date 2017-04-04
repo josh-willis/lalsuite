@@ -440,3 +440,35 @@ void LALStereo2SkyLocation (LALStatus  *status,
   RETURN (status);
 }
 
+void LALHOUGHAddSparsePHMD2HD (LALStatus      *status, 	/**< the status pointer */
+			       HOUGHMapDeriv  *hd,      /**< the Hough map derivative */
+			       SparsePHMD     *sphmd) 	/**< info from a partial map */
+{
+
+  INT2 k;
+
+   /* --------------------------------------------- */
+  INITSTATUS(status);
+  ATTATCHSTATUSPTR (status);
+
+  /*   Make sure the arguments are not NULL: */
+  ASSERT (hd,    status, HOUGHMAPH_ENULL, HOUGHMAPH_MSGENULL);
+  ASSERT (sphmd, status, HOUGHMAPH_ENULL, HOUGHMAPH_MSGENULL);
+  /* -------------------------------------------   */
+
+  /* Make sure the map contains some pixels */
+  ASSERT (hd->xSide, status, HOUGHMAPH_ESIZE, HOUGHMAPH_MSGESIZE);
+  ASSERT (hd->ySide, status, HOUGHMAPH_ESIZE, HOUGHMAPH_MSGESIZE);
+
+  for ( k = 0; k < sphmd->sparse.nnz; k++ ){
+    hd->map[ sphmd->sparse.idx[k] ] += sphmd->sparse.values[k];
+  }
+
+  /* -------------------------------------------   */
+
+  DETATCHSTATUSPTR (status);
+
+  /* normal exit */
+  RETURN (status);
+}
+
