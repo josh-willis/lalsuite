@@ -182,6 +182,11 @@ void LALStereo2SkyLocation (LALStatus  *status,
 			    HOUGHPatchGrid    *patch,
 			    HOUGHDemodPar     *parDem);
 
+void LALHOUGHAddSparsePHMD2HD (LALStatus      *status,
+			       HOUGHMapDeriv  *hd,  /* the Hough map derivative */
+			       SparsePHMD     *sphmd  /* info from a partial map */
+			       );
+
 /*@}*/
 
 #ifdef  __cplusplus
