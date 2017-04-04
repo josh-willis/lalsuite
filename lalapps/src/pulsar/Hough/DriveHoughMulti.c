@@ -210,19 +210,20 @@ void LALHOUGHCreateLUTs(LALStatus           *status,
                         UINT2               maxNBorders,
                         UINT2               ySide);
 
-void LALHOUGHCreatePHMDVS(LALStatus           *status,
-                          PHMDVectorSequence  *phmdVS,
-                          UINT4               length,
-                          UINT4               nfSize);
+void LALHOUGHCreateSparsePHMDVS(LALStatus                 *status,
+				SparsePHMDVectorSequence  *sphmdVS,
+				UINT4                     length,
+				UINT4                     nfSize);
 
-void LALHOUGHCreatePHMDs(LALStatus           *status,
-                         PHMDVectorSequence  *phmdVS,
-                         UINT2               maxNBins,
-                         UINT2               maxNBorders,
-                         UINT2               ySide);
+void LALHOUGHCreateSparsePHMDs(LALStatus                 *status,
+			       SparsePHMDVectorSequence  *sphmdVS,
+			       UINT2                     maxNBins,
+			       UINT2                     maxNBorders,
+			       UINT2                     ySide,
+			       UINT2                     xSide);
 
-void LALHOUGHDestroyPHMDs(LALStatus           *status,
-                          PHMDVectorSequence  *phmdVS);
+void LALHOUGHDestroySparsePHMDs(LALStatus                 *status,
+				SparsePHMDVectorSequence  *sphmdVS);
 
 void LALHOUGHCreateHT(LALStatus             *status,
                       HOUGHMapTotal         *ht,
@@ -275,7 +276,7 @@ int main(int argc, char *argv[]){
     static HOUGHptfLUTVector   lutV; /* the Look Up Table vector*/
     static HOUGHPeakGramVector pgV;  /* vector of peakgrams */
     static UCHARPeakGramVector upgV;  /* vector of expanded peakgrams */
-    static PHMDVectorSequence  phmdVS;  /* the partial Hough map derivatives */
+    static SparsePHMDVectorSequence  sphmdVS;  /* the sparse partial Hough map derivatives */
     static UINT8FrequencyIndexVector freqInd; /* for trajectory in time-freq plane */
     static HOUGHResolutionPar parRes;   /* patch grid information */
     static HOUGHPatchGrid  patch;   /* Patch description */
@@ -831,8 +832,8 @@ int main(int argc, char *argv[]){
         
         LAL_CALL ( LALHOUGHCreateLUTVector( &status, &lutV, mObsCohBest), &status);
         
-        LAL_CALL( LALHOUGHCreatePHMDVS( &status, &phmdVS, mObsCohBest, uvar_nfSizeCylinder), &status);
-        phmdVS.deltaF  = deltaF;
+        LAL_CALL( LALHOUGHCreateSparsePHMDVS( &status, &sphmdVS, mObsCohBest, uvar_nfSizeCylinder), &status);
+        sphmdVS.deltaF  = deltaF;
         
         LAL_CALL( LALHOUGHCreateFreqIndVector( &status, &freqInd, mObsCohBest, deltaF), &status);
         
@@ -924,7 +925,7 @@ int main(int argc, char *argv[]){
             
             LAL_CALL( LALHOUGHCreateLUTs( &status, &lutV, maxNBins, maxNBorders, ySide), &status);
             
-            LAL_CALL( LALHOUGHCreatePHMDs( &status, &phmdVS, maxNBins, maxNBorders, ySide), &status);
+            LAL_CALL( LALHOUGHCreateSparsePHMDs( &status, &sphmdVS, maxNBins, maxNBorders, ySide, xSide), &status);
             
             
             /* ************* create all the LUTs at fBin ********************  */
@@ -940,12 +941,12 @@ int main(int argc, char *argv[]){
             }
             
             /************* build the set of  PHMD centered around fBin***********/
-            phmdVS.fBinMin = fBin - uvar_nfSizeCylinder + 1 + uvar_nSpinUp;
+            sphmdVS.fBinMin = fBin - uvar_nfSizeCylinder + 1 + uvar_nSpinUp;
             /*phmdVS.fBinMin = fBin - floor( uvar_nfSizeCylinder/2.) ;*/
             
-            LAL_CALL( LALHOUGHConstructSpacePHMD(&status, &phmdVS, best.pgV, &lutV), &status );
+            LAL_CALL( LALHOUGHConstructSpaceSparsePHMD(&status, &sphmdVS, best.pgV, &lutV), &status );
             if (uvar_weighAM || uvar_weighNoise) {
-                LAL_CALL( LALHOUGHWeighSpacePHMD(&status, &phmdVS, best.weightsV), &status);
+                LAL_CALL( LALHOUGHWeighSpaceSparsePHMD(&status, &sphmdVS, best.weightsV), &status);
             }
             
             /* ************ initializing the Total Hough map space *********** */
@@ -989,10 +990,10 @@ int main(int argc, char *argv[]){
                     }
                     
                     if (uvar_weighAM || uvar_weighNoise) {
-                        LAL_CALL( LALHOUGHConstructHMT_W( &status, &ht, &freqInd, &phmdVS ), &status );
+                        LAL_CALL( LALHOUGHConstructSparseHMT_W( &status, &ht, &freqInd, &sphmdVS ), &status );
                     }
                     else {
-                        LAL_CALL( LALHOUGHConstructHMT( &status, &ht, &freqInd, &phmdVS ), &status );
+                        LAL_CALL( LALHOUGHConstructSparseHMT( &status, &ht, &freqInd, &sphmdVS ), &status );
                     }
                     
                     
@@ -1034,10 +1035,10 @@ int main(int argc, char *argv[]){
                 /***** shift the search freq. & PHMD structure 1 freq.bin ****** */
                 ++fBinSearch;
                 
-                LAL_CALL( LALHOUGHupdateSpacePHMDup(&status, &phmdVS, best.pgV, &lutV), &status );
+                LAL_CALL( LALHOUGHupdateSpaceSparsePHMDup(&status, &sphmdVS, best.pgV, &lutV), &status );
                 
                 if (uvar_weighAM || uvar_weighNoise) {
-                    LAL_CALL( LALHOUGHWeighSpacePHMD( &status, &phmdVS, best.weightsV), &status);
+                    LAL_CALL( LALHOUGHWeighSpaceSparsePHMD( &status, &sphmdVS, best.weightsV), &status);
                 }
                 
             }   /*closing second while */
@@ -1051,7 +1052,7 @@ int main(int argc, char *argv[]){
             
             LALHOUGHDestroyLUTs( &status, &lutV);
             
-            LALHOUGHDestroyPHMDs( &status, &phmdVS);
+            LALHOUGHDestroySparsePHMDs( &status, &sphmdVS);
             
             
         } /* closing while */
@@ -1081,8 +1082,8 @@ int main(int argc, char *argv[]){
         LALFree(lutV.lut);
         lutV.lut = NULL;
         
-        LALFree(phmdVS.phmd);
-        phmdVS.phmd = NULL;
+        LALFree(sphmdVS.sphmd);
+        sphmdVS.sphmd = NULL;
         
         LALFree(freqInd.data);
         freqInd.data = NULL;
@@ -2210,21 +2211,21 @@ void LALHOUGHDestroyLUTs(LALStatus           *status,
 }
 
 
-void LALHOUGHCreatePHMDVS(LALStatus           *status,
-                          PHMDVectorSequence  *phmdVS,
-                          UINT4               length,
-                          UINT4               nfSize)
+void LALHOUGHCreatePHMDVS(LALStatus                 *status,
+                          SparsePHMDVectorSequence  *sphmdVS,
+                          UINT4                     length,
+                          UINT4                     nfSize)
 {
     
     INITSTATUS(status);
     ATTATCHSTATUSPTR (status);
     
     /* check input pars are ok */
-    if (phmdVS == NULL) {
+    if (sphmdVS == NULL) {
         ABORT (status, DRIVEHOUGHCOLOR_ENULL, DRIVEHOUGHCOLOR_MSGENULL);
     }
     
-    if (phmdVS->phmd != NULL) {
+    if (sphmdVS->sphmd != NULL) {
         ABORT (status, DRIVEHOUGHCOLOR_ENONULL, DRIVEHOUGHCOLOR_MSGENONULL);
     }
     
@@ -2236,11 +2237,11 @@ void LALHOUGHCreatePHMDVS(LALStatus           *status,
         ABORT (status, DRIVEHOUGHCOLOR_EBAD, DRIVEHOUGHCOLOR_MSGEBAD);
     }
     
-    phmdVS->length  = length;
-    phmdVS->nfSize  = nfSize;
-    phmdVS->deltaF  = 0; /* initialization */
+    sphmdVS->length  = length;
+    sphmdVS->nfSize  = nfSize;
+    sphmdVS->deltaF  = 0; /* initialization */
     
-    phmdVS->phmd=(HOUGHphmd *)LALCalloc(1, length*nfSize*sizeof(HOUGHphmd));
+    sphmdVS->sphmd=(HOUGHphmd *)LALCalloc(1, length*nfSize*sizeof(HOUGHphmd));
     
     DETATCHSTATUSPTR (status);
     
@@ -2251,11 +2252,12 @@ void LALHOUGHCreatePHMDVS(LALStatus           *status,
 
 
 
-void LALHOUGHCreatePHMDs(LALStatus           *status,
-                         PHMDVectorSequence  *phmdVS,
-                         UINT2               maxNBins,
-                         UINT2               maxNBorders,
-                         UINT2               ySide)
+void LALHOUGHCreateSparsePHMDs(LALStatus                 *status,
+			       SparsePHMDVectorSequence  *sphmdVS,
+			       UINT2                     maxNBins,
+			       UINT2                     maxNBorders,
+			       UINT2                     ySide,
+			       UINT2                     xSide)
 {
     
     UINT4 j;
@@ -2264,7 +2266,7 @@ void LALHOUGHCreatePHMDs(LALStatus           *status,
     ATTATCHSTATUSPTR (status);
     
     /* check input pars are ok */
-    if (phmdVS == NULL) {
+    if (sphmdVS == NULL) {
         ABORT (status, DRIVEHOUGHCOLOR_ENULL, DRIVEHOUGHCOLOR_MSGENULL);
     }
     
@@ -2280,9 +2282,9 @@ void LALHOUGHCreatePHMDs(LALStatus           *status,
         ABORT (status, DRIVEHOUGHCOLOR_EBAD, DRIVEHOUGHCOLOR_MSGEBAD);
     }
     
-    for(j = 0; j < phmdVS->length * phmdVS->nfSize; j++){
+    for(j = 0; j < sphmdVS->length * sphmdVS->nfSize; j++){
         
-        if ( phmdVS->phmd + j == NULL) {
+        if ( sphmdVS->sphmd + j == NULL) {
             ABORT (status, DRIVEHOUGHCOLOR_ENULL, DRIVEHOUGHCOLOR_MSGENULL);
         }
         
@@ -2303,8 +2305,8 @@ void LALHOUGHCreatePHMDs(LALStatus           *status,
 }
 
 
-void LALHOUGHDestroyPHMDs(LALStatus           *status,
-                          PHMDVectorSequence  *phmdVS)
+void LALHOUGHDestroySparsePHMDs(LALStatus                 *status,
+				SparsePHMDVectorSequence  *sphmdVS)
 {
     UINT4 j;
     
