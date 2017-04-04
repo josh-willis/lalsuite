@@ -26,7 +26,7 @@
 */
 
 #include <lal/PHMD.h>
-
+#include <lal/HoughMap.h>
 
 /**
  * \author Sintes, A. M.
@@ -377,8 +377,8 @@ void LALHOUGHFull2Sparse(LALStatus      *status,
 
   nnz = 0;
 
-  for (i = 0; i < ylen; i){
-    for (j = 0; j < xlen; j) {
+  for (i = 0; i < ylen; i++){
+    for (j = 0; j < xlen; j++) {
       if (full[i*xlen+j] != 0.0) {
 	nnz++;
       }
@@ -387,14 +387,14 @@ void LALHOUGHFull2Sparse(LALStatus      *status,
 
   /* Now another pass to create the sparse matrix */
   if (nnz){
-    sparse->idx = LALMalloc(nnz, sizeof(UINT2));
-    sparse->values = LALMalloc(nnz, sizeof(HoughDT));
+    sparse->idx = (UINT2 *) LALMalloc(nnz * sizeof(UINT2));
+    sparse->values = (HoughDT *) LALMalloc(nnz * sizeof(HoughDT));
     if ( (sparse->idx == NULL) || (sparse->values == NULL) ){
       ABORT( status, PHMDH_ENULL, PHMDH_MSGENULL);
     }
     k = 0;
-    for (i = 0; i < ylen; i){
-      for (j = 0; j < xlen; j) {
+    for (i = 0; i < ylen; i++){
+      for (j = 0; j < xlen; j++) {
 	if (full[i*xlen+j] != 0.0) {
 	  sparse->idx[k] = i*xlen+j;
 	  sparse->values[k] = full[i*xlen+j];
@@ -428,6 +428,7 @@ void LALHOUGHPeak2SparsePHMD (LALStatus     *status,
   INT2    relatIndex;
   UINT4   lengthLeft, lengthRight, n, searchIndex;
   UINT8   firstBin, lastBin, pgI, pgF;
+
   /* --------------------------------------------- */
 
   INITSTATUS(status);
@@ -457,15 +458,6 @@ void LALHOUGHPeak2SparsePHMD (LALStatus     *status,
 
   if (workHD == NULL) {
     ABORT( status, PHMDH_ENULL, PHMDH_MSGENULL);
-  }
-
-  /*  Make sure there are elements in firstColumn */
-  if (sphmd->ySide == 0) {
-    ABORT( status, PHMDH_ESIZE, PHMDH_MSGESIZE);
-  }
-
-  if (sphmd->xSide == 0) {
-    ABORT( status, PHMDH_ESIZE, PHMDH_MSGESIZE);
   }
 
   if (sphmd->sparse.xlen != workHD->xSide+1) {
@@ -521,6 +513,8 @@ void LALHOUGHPeak2SparsePHMD (LALStatus     *status,
     ++column1P;
   }
 
+  minPeakBin = firstBin - pgI;
+  maxPeakBin =  lastBin - pgI;
 
  /* -------------------------------------------------------------------   */
          /* -------------------------------------------   */
