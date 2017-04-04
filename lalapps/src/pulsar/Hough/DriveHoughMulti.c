@@ -942,10 +942,10 @@ int main(int argc, char *argv[]){
             sphmdVS.fBinMin = fBin - uvar_nfSizeCylinder + 1 + uvar_nSpinUp;
             /*phmdVS.fBinMin = fBin - floor( uvar_nfSizeCylinder/2.) ;*/
             
-            LAL_CALL( LALHOUGHConstructSpaceSparsePHMD(&status, &sphmdVS, best.pgV, &lutV), &status );
             if (uvar_weighAM || uvar_weighNoise) {
                 LAL_CALL( LALHOUGHWeighSpaceSparsePHMD(&status, &sphmdVS, best.weightsV), &status);
             }
+            LAL_CALL( LALHOUGHConstructSpaceSparsePHMD(&status, &sphmdVS, best.pgV, &lutV), &status );
             
             /* ************ initializing the Total Hough map space *********** */
             
@@ -1033,11 +1033,10 @@ int main(int argc, char *argv[]){
                 /***** shift the search freq. & PHMD structure 1 freq.bin ****** */
                 ++fBinSearch;
                 
-                LAL_CALL( LALHOUGHupdateSpaceSparsePHMDup(&status, &sphmdVS, best.pgV, &lutV), &status );
-                
                 if (uvar_weighAM || uvar_weighNoise) {
                     LAL_CALL( LALHOUGHWeighSpaceSparsePHMD( &status, &sphmdVS, best.weightsV), &status);
                 }
+                LAL_CALL( LALHOUGHupdateSpaceSparsePHMDup(&status, &sphmdVS, best.pgV, &lutV), &status );
                 
             }   /*closing second while */
             
@@ -2208,10 +2207,10 @@ void LALHOUGHDestroyLUTs(LALStatus           *status,
 }
 
 
-void LALHOUGHCreatePHMDVS(LALStatus                 *status,
-                          SparsePHMDVectorSequence  *sphmdVS,
-                          UINT4                     length,
-                          UINT4                     nfSize)
+void LALHOUGHCreateSparsePHMDVS(LALStatus                 *status,
+				SparsePHMDVectorSequence  *sphmdVS,
+				UINT4                     length,
+				UINT4                     nfSize)
 {
     
     INITSTATUS(status);
@@ -2238,7 +2237,7 @@ void LALHOUGHCreatePHMDVS(LALStatus                 *status,
     sphmdVS->nfSize  = nfSize;
     sphmdVS->deltaF  = 0; /* initialization */
     
-    sphmdVS->sphmd=(HOUGHphmd *)LALCalloc(1, length*nfSize*sizeof(HOUGHphmd));
+    sphmdVS->sphmd = (SparsePHMD *) LALCalloc(length*nfSize, sizeof(SparsePHMD));
     
     DETATCHSTATUSPTR (status);
     
@@ -2279,18 +2278,24 @@ void LALHOUGHCreateSparsePHMDs(LALStatus                 *status,
         ABORT (status, DRIVEHOUGHCOLOR_EBAD, DRIVEHOUGHCOLOR_MSGEBAD);
     }
     
+    if (xSide <= 0) {
+        ABORT (status, DRIVEHOUGHCOLOR_EBAD, DRIVEHOUGHCOLOR_MSGEBAD);
+    }
+    
     for(j = 0; j < sphmdVS->length * sphmdVS->nfSize; j++){
         
         if ( sphmdVS->sphmd + j == NULL) {
             ABORT (status, DRIVEHOUGHCOLOR_ENULL, DRIVEHOUGHCOLOR_MSGENULL);
         }
         
-        phmdVS->phmd[j].maxNBorders = maxNBorders;
-        phmdVS->phmd[j].leftBorderP = (HOUGHBorder **)LALCalloc(maxNBorders, sizeof(HOUGHBorder *));
-        phmdVS->phmd[j].rightBorderP = (HOUGHBorder **)LALCalloc(maxNBorders, sizeof(HOUGHBorder *));
-        
-        phmdVS->phmd[j].ySide = ySide;
-        phmdVS->phmd[j].firstColumn = (UCHAR *)LALCalloc(ySide, sizeof(UCHAR));
+        sphmdVS->sphmd[j].xSide = xSide;
+        sphmdVS->sphmd[j].ySide = ySide;
+        sphmdVS->sphmd[j].weight = 1.0;
+        sphmdVS->sphmd[j].sparse.xlen = xSide+1;
+        sphmdVS->sphmd[j].sparse.ylen = ySide;
+        sphmdVS->sphmd[j].sparse.nnz = 0;
+        sphmdVS->sphmd[j].sparse.idx = NULL;
+        sphmdVS->sphmd[j].sparse.values = NULL;
     }
     
     
@@ -2301,7 +2306,6 @@ void LALHOUGHCreateSparsePHMDs(LALStatus                 *status,
     
 }
 
-
 void LALHOUGHDestroySparsePHMDs(LALStatus                 *status,
 				SparsePHMDVectorSequence  *sphmdVS)
 {
@@ -2310,12 +2314,11 @@ void LALHOUGHDestroySparsePHMDs(LALStatus                 *status,
     INITSTATUS(status);
     ATTATCHSTATUSPTR (status);
     
-    for(j = 0; j < phmdVS->length * phmdVS->nfSize; j++){
+    for(j = 0; j < sphmdVS->length * sphmdVS->nfSize; j++){
         
-        if (phmdVS->phmd + j) {
-            LALFree( phmdVS->phmd[j].leftBorderP);
-            LALFree( phmdVS->phmd[j].rightBorderP);
-            LALFree( phmdVS->phmd[j].firstColumn);
+        if (sphmdVS->sphmd + j) {
+            LALFree( sphmdVS->sphmd[j].sparse.idx);
+            LALFree( sphmdVS->sphmd[j].sparse.values);
         }
         
     }
