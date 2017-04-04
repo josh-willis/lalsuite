@@ -152,6 +152,16 @@ typedef struct tagHOUGHphmd{
   HoughDT        weight; 	/**< First column border, containing the edge effects  when clipping on a finite patch */
 } HOUGHphmd;
 
+typedef struct tagSparseMatrix{
+  UINT2   xlen;       /**< Fast-varying matrix length */
+  UINT2   ylen;       /**< Slow-varying matrix length */
+  UINT2   nnz;        /**< Number of non-zero entries in the matrix */
+  UINT2   *idx;       /**< Array of indices of non-zero values, increasing, max xlen*ylen */
+  HoughDT  *values;   /**< Array of non-zero values */
+} SparseMatrix;
+ 
+
+
 /*
  * 11. Extern Global variables. (discouraged)
  */
@@ -165,6 +175,13 @@ void LALHOUGHPeak2PHMD (LALStatus    *status,
 			HOUGHptfLUT  *lut,
 			HOUGHPeakGram *pg
 			);
+
+void LALHOUGHFull2Sparse(LALStatus      *status,
+			 HoughDT        *full,
+                         UINT2          xlen,
+                         UINT2          ylen,
+                         SparseMatrix  *sparse
+                         );
 
 /*@}*/
 #ifdef  __cplusplus
