@@ -116,16 +116,6 @@ extern "C" {
 /* typedef UCHAR HoughTT; */
 /*typedef UINT2 HoughTT; */
 
-
-/** This structure stores the Hough map derivative */
-typedef struct tagHOUGHMapDeriv{
-  UINT2     xSide;  /**< number of physical pixels in the x direction */
-  UINT2     ySide;  /**< number of physical pixels in the y direction */
-  HoughDT   *map ;  /**< the pixel count derivatives;
-                     * the number of elements to allocate is ySide*(xSide+1)* */
-} HOUGHMapDeriv;
-
-
 /**  This structure stores the Hough map */
 typedef struct tagHOUGHMapTotal{
   INT8               f0Bin;      /**< frequency bin for which it has been constructed */

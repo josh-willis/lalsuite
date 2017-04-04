@@ -135,6 +135,14 @@ typedef REAL8 HoughDT; /* for weighted hough maps */
     INT4    *peak;      /**< The peak indices relative to \c fBinIni, i.e., the zero peak  corresponds to \c fBinIni */
   } HOUGHPeakGram;
 
+/** This structure stores the Hough map derivative */
+typedef struct tagHOUGHMapDeriv{
+  UINT2     xSide;  /**< number of physical pixels in the x direction */
+  UINT2     ySide;  /**< number of physical pixels in the y direction */
+  HoughDT   *map ;  /**< the pixel count derivatives;
+                     * the number of elements to allocate is ySide*(xSide+1)* */
+} HOUGHMapDeriv;
+
 /**
  * \brief This structure stores a partial Hough map derivative
  */
