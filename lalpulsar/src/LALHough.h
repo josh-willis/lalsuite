@@ -311,12 +311,6 @@ void LALHOUGHConstructSparseHMT  (LALStatus                  *status,
 				  SparsePHMDVectorSequence   *sphmdVS
 				  );
 
-void LALHOUGHConstructSparseHMT_W  (LALStatus                  *status,
-				    HOUGHMapTotal              *ht,
-				    UINT8FrequencyIndexVector  *freqInd,
-				    SparsePHMDVectorSequence   *sphmdVS
-				    );
-
 void LALHOUGHWeighSpaceSparsePHMD  (LALStatus                  *status,
 				    SparsePHMDVectorSequence   *sphmdVS,
 				    REAL8Vector                *weightV
