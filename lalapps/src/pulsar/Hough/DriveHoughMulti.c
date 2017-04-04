@@ -767,6 +767,8 @@ int main(int argc, char *argv[]){
     else {LogPrintf (LOG_NORMAL, "Starting loop over skypatches...");}
 
     /* loop over sky patches -- main Hough calculations */
+    UINT8 iter = 0;
+#define ITERMAX 21
     for (skyCounter = 0; skyCounter < nSkyPatches; skyCounter++)
     {
         UINT4 k;
@@ -1089,7 +1091,8 @@ int main(int argc, char *argv[]){
             XLALDestroyUINT8Vector (hist);
             XLALDestroyUINT8Vector (histTotal);
         }
-        
+	iter += 1;    
+	if (iter >= ITERMAX) break;
     } /* finish loop over skypatches */
     LogPrintfVerbatim (LOG_NORMAL, "...done\n");
     
