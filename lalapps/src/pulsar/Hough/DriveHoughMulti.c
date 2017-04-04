@@ -987,12 +987,11 @@ int main(int argc, char *argv[]){
                         freqInd.data[j] = fBinSearch + floor(best.timeDiffV->data[j]*f1dis + 0.5);
                     }
                     
-                    if (uvar_weighAM || uvar_weighNoise) {
-                        LAL_CALL( LALHOUGHConstructSparseHMT_W( &status, &ht, &freqInd, &sphmdVS ), &status );
-                    }
-                    else {
-                        LAL_CALL( LALHOUGHConstructSparseHMT( &status, &ht, &freqInd, &sphmdVS ), &status );
-                    }
+		    /* With SparsePHMD, we don't use separate weighted/unweighted versions of
+                     * ConstructHMT
+                     */
+
+		    LAL_CALL( LALHOUGHConstructSparseHMT( &status, &ht, &freqInd, &sphmdVS ), &status );
                     
                     
                     /* ********************* perfom stat. analysis on the maps ****************** */
