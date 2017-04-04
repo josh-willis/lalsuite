@@ -153,14 +153,20 @@ typedef struct tagHOUGHphmd{
 } HOUGHphmd;
 
 typedef struct tagSparseMatrix{
-  UINT2   xlen;       /**< Fast-varying matrix length */
-  UINT2   ylen;       /**< Slow-varying matrix length */
-  UINT2   nnz;        /**< Number of non-zero entries in the matrix */
-  UINT2   *idx;       /**< Array of indices of non-zero values, increasing, max xlen*ylen */
-  HoughDT  *values;   /**< Array of non-zero values */
+  UINT2    xlen;       /**< Fast-varying matrix length */
+  UINT2    ylen;       /**< Slow-varying matrix length */
+  UINT2    nnz;        /**< Number of non-zero entries in the matrix */
+  UINT2    *idx;       /**< Array of indices of non-zero values, increasing, max xlen*ylen */
+  HoughDT  *values;    /**< Array of non-zero values */
 } SparseMatrix;
  
-
+typedef struct tagSparsePHMD{
+  UINT2          xSide;
+  UINT2          ySide;
+  UINT8          fBin;
+  HoughDT        weight;     /**< Weight to apply to each value*/
+  SparseMatrix   sparse;
+} SparsePHMD;
 
 /*
  * 11. Extern Global variables. (discouraged)

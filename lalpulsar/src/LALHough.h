@@ -195,6 +195,15 @@ typedef struct tagPHMDVectorSequence{
   HOUGHphmd   *phmd;     /**< the partial Hough map derivatives */
 } PHMDVectorSequence;
 
+typedef struct tagSparsePHMDVectorSequence{
+  UINT4        nfSize;    /**< number of different frequencies */
+  UINT4        length;    /**< number of elements for each frequency */
+  UINT8        fBinMin;   /**< frequency index of smallest intrinsic frequency in circular buffer */
+  REAL8        deltaF;    /**< frequency resolution */
+  UINT4        breakLine; /**< Mark \f$\in\f$[0, \c nfSize) (of the circular buffer) pointing to the starting of the \c fBinMin line */
+  SparsePHMD   *sphmd;    /**< the sparse partial Hough map derivatives */
+} SparsePHMDVectorSequence;
+
 /** This structure stores the residual spin-down parameters at a given time */
 typedef struct tagHOUGHResidualSpinPar{
   REAL8          deltaF;   	/**< Frequency resolution;  df=1/TCOH */
@@ -275,6 +284,43 @@ void LALHOUGHComputeMultiIFOAMWeights  (LALStatus          *status,
 					REAL8              alpha,
 					REAL8              delta
 					);
+
+/** Sparse versions of functions taking PHMD Vector Sequences */
+
+void LALHOUGHConstructSpaceSparsePHMD (LALStatus                  *status,
+				       SparsePHMDVectorSequence   *sphmdVS,
+				       HOUGHPeakGramVector        *pgV,
+				       HOUGHptfLUTVector          *lutV
+				       );
+
+void LALHOUGHupdateSpaceSparsePHMDup (LALStatus                  *status,
+				      SparsePHMDVectorSequence   *sphmdVS,
+				      HOUGHPeakGramVector        *pgV,
+				      HOUGHptfLUTVector          *lutV
+				      );
+
+void LALHOUGHupdateSpaceSparsePHMDdn (LALStatus                  *status,
+				      SparsePHMDVectorSequence   *sphmdVS,
+				      HOUGHPeakGramVector        *pgV,
+				      HOUGHptfLUTVector          *lutV
+				      );
+
+void LALHOUGHConstructSparseHMT  (LALStatus                  *status,
+				  HOUGHMapTotal              *ht,
+				  UINT8FrequencyIndexVector  *freqInd,
+				  SparsePHMDVectorSequence   *sphmdVS
+				  );
+
+void LALHOUGHConstructSparseHMT_W  (LALStatus                  *status,
+				    HOUGHMapTotal              *ht,
+				    UINT8FrequencyIndexVector  *freqInd,
+				    SparsePHMDVectorSequence   *sphmdVS
+				    );
+
+void LALHOUGHWeighSpaceSparsePHMD  (LALStatus                  *status,
+				    SparsePHMDVectorSequence   *sphmdVS,
+				    REAL8Vector                *weightV
+				    );
 
 
 /*@}*/
