@@ -1033,9 +1033,10 @@ int main(int argc, char *argv[]){
                 ++fBinSearch;
                 
                 if (uvar_weighAM || uvar_weighNoise) {
-                    LAL_CALL( LALHOUGHWeighSpaceSparsePHMD( &status, &sphmdVS, best.weightsV), &status);
-                }
-                LAL_CALL( LALHOUGHupdateSpaceSparsePHMDup(&status, &sphmdVS, best.pgV, &lutV), &status );
+		  LAL_CALL( LALHOUGHupdateSpaceSparsePHMDup_W(&status, &sphmdVS, best.pgV, &lutV, best.weightsV), &status);
+                } else {
+		  LAL_CALL( LALHOUGHupdateSpaceSparsePHMDup(&status, &sphmdVS, best.pgV, &lutV), &status );
+		}
                 
             }   /*closing second while */
             

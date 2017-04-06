@@ -1390,6 +1390,95 @@ void LALHOUGHWeighSpaceSparsePHMD  (LALStatus                  *status,  /**< po
   RETURN (status);
 }
 
+/**
+ * This function updates the space of <tt>phmd</tt> increasing the frequency <tt>phmdVS->fBinMin</tt> by one.
+ */
+void LALHOUGHupdateSpaceSparsePHMDup_W  (LALStatus                  *status,
+					 SparsePHMDVectorSequence   *sphmdVS,
+					 HOUGHPeakGramVector        *pgV,
+					 HOUGHptfLUTVector          *lutV,
+					 REAL8Vector                *weightV)
+{
+  UINT4    k, breakLine;
+  UINT4    nfSize;    /* number of different frequencies */
+  UINT4    length;    /* number of elements for each frequency */
+  UINT8    fBinMin;   /* minimum frequency bin */
+  UINT8    fBin;      /* present frequency bin */
 
+  /* --------------------------------------------- */
+  INITSTATUS(status);
+  ATTATCHSTATUSPTR (status);
+
+
+  /*   Make sure the arguments are not NULL: */
+  ASSERT (sphmdVS, status, LALHOUGHH_ENULL, LALHOUGHH_MSGENULL);
+  ASSERT (pgV,     status, LALHOUGHH_ENULL, LALHOUGHH_MSGENULL);
+  ASSERT (lutV,    status, LALHOUGHH_ENULL, LALHOUGHH_MSGENULL);
+  ASSERT (weightV, status, LALHOUGHH_ENULL, LALHOUGHH_MSGENULL);
+  /* -------------------------------------------   */
+
+  ASSERT (sphmdVS->sphmd, status, LALHOUGHH_ENULL, LALHOUGHH_MSGENULL);
+  ASSERT (pgV->pg,        status, LALHOUGHH_ENULL, LALHOUGHH_MSGENULL);
+  ASSERT (lutV->lut,      status, LALHOUGHH_ENULL, LALHOUGHH_MSGENULL);
+  ASSERT (weightV->data,  status, LALHOUGHH_ENULL, LALHOUGHH_MSGENULL);
+  /* -------------------------------------------   */
+
+  /* Make sure there is no size mismatch */
+  ASSERT (pgV->length == lutV->length, status,
+	  LALHOUGHH_ESZMM, LALHOUGHH_MSGESZMM);
+  ASSERT (pgV->length == sphmdVS->length, status,
+	  LALHOUGHH_ESZMM, LALHOUGHH_MSGESZMM);
+  ASSERT (weightV->length == sphmdVS->length, status,
+	  LALHOUGHH_ESZMM, LALHOUGHH_MSGESZMM);
+  /* -------------------------------------------   */
+
+  /* Make sure there are elements to be computed*/
+  ASSERT (sphmdVS->length, status, LALHOUGHH_ESIZE, LALHOUGHH_MSGESIZE);
+  ASSERT (sphmdVS->nfSize, status, LALHOUGHH_ESIZE, LALHOUGHH_MSGESIZE);
+ /* -------------------------------------------   */
+
+
+  length = sphmdVS->length;
+  nfSize = sphmdVS->nfSize;
+#ifndef LAL_NDEBUG
+  REAL8 deltaF =  sphmdVS->deltaF;
+#endif
+
+  breakLine = sphmdVS->breakLine; /* old Break Line */
+  fBinMin = sphmdVS->fBinMin; /* initial frequency value  */
+
+  /* Make sure initial breakLine is in [0,nfSize)  */
+  ASSERT ( breakLine < nfSize, status, LALHOUGHH_EVAL, LALHOUGHH_MSGEVAL);
+
+  /* -------------------------------------------   */
+
+  /* Updating the space of PHMD increasing frequency */
+
+  fBin = fBinMin + nfSize;
+
+  for ( k=0; k<length; ++k ){
+    /* make sure all deltaF are consistent */
+    ASSERT (deltaF == lutV->lut[k].deltaF,
+	    status, LALHOUGHH_EVAL, LALHOUGHH_MSGEVAL);
+
+    sphmdVS->sphmd[ breakLine*length+k ].fBin = fBin;
+    sphmdVS->sphmd[ breakLine*length+k ].weight = (HoughDT) weightV->data[k];
+    TRY( LALHOUGHPeak2SparsePHMD(status->statusPtr,
+				 &(sphmdVS->sphmd[ breakLine*length+k ]),
+				 &(lutV->lut[k]), &(pgV->pg[k]),
+				 &(sphmdVS->workPHMD), &(sphmdVS->workHD)), status);
+  }
+
+  /* Shift fBinMin and its mark */
+  ++sphmdVS->fBinMin;
+
+  sphmdVS->breakLine = (breakLine +1) % nfSize;
+  /* mark [0,nfSize) (of the circular buffer, modulus nfSize)
+     pointing to the starting of the new fBinMin line */
+
+  DETATCHSTATUSPTR (status);
+  /* normal exit */
+  RETURN (status);
+}
 
 /*@}*/
