@@ -318,6 +318,13 @@ void LALHOUGHWeighSpaceSparsePHMD  (LALStatus                  *status,
 				    REAL8Vector                *weightV
 				    );
 
+void LALHOUGHupdateSpaceSparsePHMDup_W (LALStatus                  *status,
+					SparsePHMDVectorSequence   *sphmdVS,
+					HOUGHPeakGramVector        *pgV,
+					HOUGHptfLUTVector          *lutV,
+					REAL8Vector                *weightV
+					);
+
 
 /*@}*/
 
