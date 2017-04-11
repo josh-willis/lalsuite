@@ -372,8 +372,8 @@ void LALHOUGHConstructHMT  (LALStatus                  *status,	/**< pointer to 
   /* Initializing  hd map and memory allocation */
   hd.xSide = xSide;
   hd.ySide = ySide;
-  hd.map = (HoughDT *)LALMalloc(ySide*(xSide+1)*sizeof(HoughDT));
-  if (hd. map == NULL) {
+  hd.map = (HoughDT *) LALCalloc(ySide*(xSide+1), sizeof(HoughDT));
+  if (hd.map == NULL) {
     ABORT( status, LALHOUGHH_EMEM, LALHOUGHH_MSGEMEM);
   }
   /* -------------------------------------------   */
@@ -545,8 +545,8 @@ void LALHOUGHConstructHMT_W (LALStatus                  *status,	/**< pointer to
   /* Initializing  hd map and memory allocation */
   hd.xSide = xSide;
   hd.ySide = ySide;
-  hd.map = (HoughDT *)LALMalloc(ySide*(xSide+1)*sizeof(HoughDT));
-  if (hd. map == NULL) {
+  hd.map = (HoughDT *) LALCalloc(ySide*(xSide+1), sizeof(HoughDT));
+  if (hd.map == NULL) {
     ABORT( status, LALHOUGHH_EMEM, LALHOUGHH_MSGEMEM);
   }
 
@@ -1302,8 +1302,8 @@ void LALHOUGHConstructSparseHMT  (LALStatus                  *status,	/**< point
   /* Initializing  hd map and memory allocation */
   hd.xSide = xSide;
   hd.ySide = ySide;
-  hd.map = (HoughDT *)LALMalloc(ySide*(xSide+1)*sizeof(HoughDT));
-  if (hd. map == NULL) {
+  hd.map = (HoughDT *) LALCalloc(ySide*(xSide+1), sizeof(HoughDT));
+  if (hd.map == NULL) {
     ABORT( status, LALHOUGHH_EMEM, LALHOUGHH_MSGEMEM);
   }
   /* -------------------------------------------   */
