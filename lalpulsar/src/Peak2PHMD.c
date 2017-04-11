@@ -665,6 +665,8 @@ void LALHOUGHPeak2SparsePHMD (LALStatus     *status,
 
   workPHMD->lengthLeft  = lengthLeft;
   workPHMD->lengthRight = lengthRight;
+  workPHMD->fBin = sphmd->fBin;
+  workPHMD->weight = sphmd->weight;
   memset((void *) workHD->map, 0, (workHD->xSide+1)*(workHD->ySide)*sizeof(HoughDT) );
   TRY( LALHOUGHAddPHMD2HD_W(status->statusPtr, workHD, workPHMD), status);
   TRY( LALHOUGHFull2Sparse(status->statusPtr, workHD->map, (workHD->xSide)+1, workHD->ySide, &(sphmd->sparse) ), status);
