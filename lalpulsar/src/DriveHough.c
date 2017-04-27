@@ -1048,6 +1048,7 @@ void LALHOUGHConstructSpaceSparsePHMD  (LALStatus                  *status,	/**<
 				   &(sphmdVS->sphmd[ j*length+k ]),
 				   &(lutV->lut[k]), &(pgV->pg[k]),
 				   &(sphmdVS->workPHMD), &(sphmdVS->workHD)), status);
+      sphmdVS->table[ j*length+k ] = sphmdVS->sphmd[ j*length+k ].sparse.nnz;
       ++fBin;
     }
   }
@@ -1129,6 +1130,7 @@ void LALHOUGHupdateSpaceSparsePHMDup  (LALStatus                  *status,
 				 &(sphmdVS->sphmd[ breakLine*length+k ]),
 				 &(lutV->lut[k]), &(pgV->pg[k]),
 				 &(sphmdVS->workPHMD), &(sphmdVS->workHD)), status);
+    sphmdVS->table[ breakLine*length+k ] = sphmdVS->sphmd[ breakLine*length+k ].sparse.nnz;
   }
 
   /* Shift fBinMin and its mark */
@@ -1221,6 +1223,7 @@ void LALHOUGHupdateSpaceSparsePHMDdn  (LALStatus                  *status,
 				 &(sphmdVS->sphmd[ breakLine*length+k ]),
 				 &(lutV->lut[k]), &(pgV->pg[k]),
 				 &(sphmdVS->workPHMD), &(sphmdVS->workHD)), status);
+    sphmdVS->table[ breakLine*length+k ] = sphmdVS->sphmd[ breakLine*length+k ].sparse.nnz;
   }
 
   DETATCHSTATUSPTR (status);
@@ -1321,8 +1324,10 @@ void LALHOUGHConstructSparseHMT  (LALStatus                  *status,	/**< point
     j = (fBin + breakLine) % nfSize;
 
     /* Add the corresponding PHMD to HD */
-    TRY( LALHOUGHAddSparsePHMD2HD(status->statusPtr,
-				  &hd, &(sphmdVS->sphmd[j*length+k]) ), status);
+    if (sphmdVS->table[j*length+k]){
+      TRY( LALHOUGHAddSparsePHMD2HD(status->statusPtr,
+				    &hd, &(sphmdVS->sphmd[j*length+k]) ), status);
+    }
   }
 
   TRY( LALHOUGHIntegrHD2HT(status->statusPtr, ht, &hd), status);
@@ -1467,6 +1472,7 @@ void LALHOUGHupdateSpaceSparsePHMDup_W  (LALStatus                  *status,
 				 &(sphmdVS->sphmd[ breakLine*length+k ]),
 				 &(lutV->lut[k]), &(pgV->pg[k]),
 				 &(sphmdVS->workPHMD), &(sphmdVS->workHD)), status);
+    sphmdVS->table[ breakLine*length+k ] = sphmdVS->sphmd[ breakLine*length+k ].sparse.nnz;
   }
 
   /* Shift fBinMin and its mark */

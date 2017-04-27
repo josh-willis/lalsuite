@@ -1082,6 +1082,9 @@ int main(int argc, char *argv[]){
         LALFree(sphmdVS.sphmd);
         sphmdVS.sphmd = NULL;
         
+        LALFree(sphmdVS.table);
+        sphmdVS.table = NULL;
+        
         LALFree(freqInd.data);
         freqInd.data = NULL;
         
@@ -2225,6 +2228,10 @@ void LALHOUGHCreateSparsePHMDVS(LALStatus                 *status,
         ABORT (status, DRIVEHOUGHCOLOR_ENONULL, DRIVEHOUGHCOLOR_MSGENONULL);
     }
     
+    if (sphmdVS->table != NULL) {
+        ABORT (status, DRIVEHOUGHCOLOR_ENONULL, DRIVEHOUGHCOLOR_MSGENONULL);
+    }
+    
     if (length <= 0) {
         ABORT (status, DRIVEHOUGHCOLOR_EBAD, DRIVEHOUGHCOLOR_MSGEBAD);
     }
@@ -2238,6 +2245,7 @@ void LALHOUGHCreateSparsePHMDVS(LALStatus                 *status,
     sphmdVS->deltaF  = 0; /* initialization */
     
     sphmdVS->sphmd = (SparsePHMD *) LALCalloc(length*nfSize, sizeof(SparsePHMD));
+    sphmdVS->table = (UINT2 *) LALCalloc(length*nfSize, sizeof(UINT2));
     
     DETATCHSTATUSPTR (status);
     

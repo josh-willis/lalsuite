@@ -202,8 +202,9 @@ typedef struct tagSparsePHMDVectorSequence{
   REAL8         deltaF;    /**< frequency resolution */
   UINT4         breakLine; /**< Mark \f$\in\f$[0, \c nfSize) (of the circular buffer) pointing to the starting of the \c fBinMin line */
   SparsePHMD    *sphmd;    /**< the sparse partial Hough map derivatives */
-  HOUGHphmd     workPHMD; /* working space */
-  HOUGHMapDeriv workHD;   /* working space */
+  HOUGHphmd     workPHMD;  /* working space */
+  HOUGHMapDeriv workHD;    /* working space */
+  UINT2         *table;    /* table of nnz counts for each sparse matrix */
 } SparsePHMDVectorSequence;
 
 /** This structure stores the residual spin-down parameters at a given time */
