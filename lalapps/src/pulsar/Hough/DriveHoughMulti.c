@@ -2766,11 +2766,10 @@ void ComputeandPrintChi2 ( LALStatus                *status,
     
     /* Open file to write the toplist with 2 new columns: significance and chi2 */
     
-    fpChi2 = fopen("hough_top.dat", "w");
     char path[512];
     snprintf(path, sizeof(path), "houghtop_chi2_%d_%d.dat", skyCounter+1,nSkyPatches);
     fpChi2 = fopen(path, "w");
-
+    ASSERT (fpChi2,  status, DRIVEHOUGHCOLOR_ENULL, DRIVEHOUGHCOLOR_MSGENULL);
     
     /* ----------------------------------------------------------------------------------*/
     /* Loop over all the elements in the TopList */
